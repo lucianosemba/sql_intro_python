@@ -54,7 +54,7 @@ def create_schema():
     conn.close()
 
 
-def fill():
+def fill(estudiantes):
     print('Completemos esta tablita!')
     # Llenar la tabla de la secundaria con al menos 5 estudiantes
     # Cada estudiante tiene los posibles campos:
@@ -67,13 +67,30 @@ def fill():
     # Se debe utilizar la sentencia INSERT.
     # Observar que hay campos como "grade" y "tutor" que no son obligatorios
     # en el schema creado, puede obivar en algunos casos completar esos campos
-
+    conn = sqlite3.connect('secundaria.db')
+    c = conn.cursor()
+    c.executemany("""
+        INSERT INTO estudiante(name, age, grade,tutor)
+        VALUES (?,?,?,?);""", estudiantes)
+    
+    conn.commit()
+    conn.close()
+    
 
 def fetch():
     print('Comprobemos su contenido, ¿qué hay en la tabla?')
     # Utilizar la sentencia SELECT para imprimir en pantalla
     # todas las filas con todas sus columnas
     # Utilizar fetchone para imprimir de una fila a la vez
+    conn = sqlite3.connect('secundaria.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM estudiante')    
+    while True:
+        row = c.fetchone()
+        if row is None:
+            break
+        print(row)
+    conn.close()
 
 
 def search_by_grade(grade):
@@ -84,6 +101,16 @@ def search_by_grade(grade):
     # De la lista de esos estudiantes el SELECT solo debe traer
     # las siguientes columnas por fila encontrada:
     # id / name / age
+    
+    conn = sqlite3.connect('secundaria.db')
+    c = conn.cursor()
+    c.execute('SELECT id, name, age FROM estudiante WHERE grade =?', (grade,))    
+    while True:
+        row = c.fetchone()
+        if row is None:
+            break
+        print(row)
+    conn.close()
 
 
 def insert(grade):
@@ -91,26 +118,54 @@ def insert(grade):
     # Utilizar la sentencia INSERT para ingresar nuevos estudiantes
     # a la secundaria
 
+    conn = sqlite3.connect('secundaria.db')
+    c = conn.cursor()
+    c.execute("""
+            INSERT INTO estudiante(name, age)
+            values(?,?);
+            """, (grade))  
+
+    conn.commit()  
+    conn.close()
+
 
 def modify(id, name):
     print('Modificando la tabla')
     # Utilizar la sentencia UPDATE para modificar aquella fila (estudiante)
     # cuyo id sea el "id" pasado como parámetro,
     # modificar su nombre por "name" pasado como parámetro
+    conn = sqlite3.connect('secundaria.db')
+    c = conn.cursor()
+    c.execute("""
+            UPDATE estudiante SET name =? 
+            WHERE id =?;
+            """, (name, id))  
+
+    conn.commit()  
+    conn.close()
 
 
 if __name__ == '__main__':
     print("Bienvenidos a otra clase de Inove con Python")
     create_schema()   # create and reset database (DB)
-    # fill()
-    # fetch()
+    estudiantes = [('Mariano', 17, 5, 'Juan'),
+             ('Lorena', 14, 2, 'Julio'),
+             ('Hernán', 15, 3, 'Elisa'),
+             ('Ana', 16, 4, 'Juana'),
+             ('Pilar', 13, '', '')
+             ]
+    fill(estudiantes)
+    fetch()
 
     grade = 3
-    # search_by_grade(grade)
+    search_by_grade(grade)
 
     new_student = ['You', 16]
-    # insert(new_student)
+    insert(new_student)
+
 
     name = '¿Inove?'
     id = 2
-    # modify(id, name)
+    modify(id, name)
+
+    fetch()
